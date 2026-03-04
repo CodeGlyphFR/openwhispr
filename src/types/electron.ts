@@ -250,15 +250,6 @@ export interface LlamaVulkanDownloadProgress {
   percentage: number;
 }
 
-export interface ReferralItem {
-  id: string;
-  email: string;
-  name: string | null;
-  status: "pending" | "completed" | "rewarded";
-  created_at: string;
-  first_payment_at: string | null;
-}
-
 declare global {
   interface Window {
     electronAPI: {
@@ -734,35 +725,6 @@ declare global {
         error?: string;
         code?: string;
       }>;
-      cloudUsage?: () => Promise<{
-        success: boolean;
-        wordsUsed?: number;
-        wordsRemaining?: number;
-        limit?: number;
-        plan?: string;
-        status?: string;
-        isSubscribed?: boolean;
-        isTrial?: boolean;
-        trialDaysLeft?: number | null;
-        currentPeriodEnd?: string | null;
-        billingInterval?: "monthly" | "annual" | null;
-        resetAt?: string;
-        error?: string;
-        code?: string;
-      }>;
-      cloudCheckout?: (plan?: "monthly" | "annual") => Promise<{
-        success: boolean;
-        url?: string;
-        error?: string;
-        code?: string;
-      }>;
-      cloudBillingPortal?: () => Promise<{
-        success: boolean;
-        url?: string;
-        error?: string;
-        code?: string;
-      }>;
-
       // Cloud audio file transcription
       transcribeAudioFileCloud?: (filePath: string) => Promise<{
         success: boolean;
@@ -786,12 +748,6 @@ declare global {
         text?: string;
         error?: string;
       }>;
-
-      // Usage limit events
-      notifyLimitReached?: (data: { wordsUsed: number; limit: number }) => void;
-      onLimitReached?: (
-        callback: (data: { wordsUsed: number; limit: number }) => void
-      ) => () => void;
 
       // AssemblyAI Streaming
       assemblyAiStreamingWarmup?: (options?: {
@@ -826,46 +782,6 @@ declare global {
       onAssemblyAiSessionEnd?: (
         callback: (data: { audioDuration?: number; text?: string }) => void
       ) => () => void;
-
-      // Referral stats
-      getReferralStats?: () => Promise<{
-        referralCode: string;
-        referralLink: string;
-        totalReferrals: number;
-        completedReferrals: number;
-        pendingReferrals: number;
-        totalMonthsEarned: number;
-        referrals: Array<{
-          id: string;
-          email: string;
-          name: string;
-          status: "pending" | "completed" | "rewarded";
-          created_at: string;
-          first_payment_at: string | null;
-          words_used: number;
-        }>;
-      }>;
-
-      sendReferralInvite?: (email: string) => Promise<{
-        success: boolean;
-        invite: {
-          id: string;
-          recipientEmail: string;
-          status: "sent" | "failed" | "opened" | "converted";
-          sentAt: string;
-        };
-      }>;
-
-      getReferralInvites?: () => Promise<{
-        invites: Array<{
-          id: string;
-          recipientEmail: string;
-          status: "sent" | "failed" | "opened" | "converted";
-          sentAt: string;
-          openedAt?: string;
-          convertedAt?: string;
-        }>;
-      }>;
 
       // Deepgram Streaming
       deepgramStreamingWarmup?: (options?: { sampleRate?: number; language?: string }) => Promise<{

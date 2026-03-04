@@ -127,18 +127,6 @@ export const useAudioRecording = (toast, options = {}) => {
             });
           }
 
-          // Cloud usage: limit reached after this transcription
-          if (result.source === "openwhispr" && result.limitReached) {
-            // Notify control panel to show UpgradePrompt dialog
-            window.electronAPI?.notifyLimitReached?.({
-              wordsUsed: result.wordsUsed,
-              limit:
-                result.wordsRemaining !== undefined
-                  ? result.wordsUsed + result.wordsRemaining
-                  : 2000,
-            });
-          }
-
           if (audioManagerRef.current.sttConfig?.dictation?.mode === "streaming") {
             audioManagerRef.current.warmupStreamingConnection();
           }

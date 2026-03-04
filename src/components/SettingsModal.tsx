@@ -7,7 +7,6 @@ import {
   UserCircle,
   Wrench,
   Keyboard,
-  CreditCard,
   Shield,
 } from "lucide-react";
 import SidebarModal, { SidebarItem } from "./ui/SidebarModal";
@@ -41,13 +40,6 @@ export default function SettingsModal({ open, onOpenChange, initialSection }: Se
         label: t("settingsModal.sections.account.label"),
         icon: UserCircle,
         description: t("settingsModal.sections.account.description"),
-        group: t("settingsModal.groups.account"),
-      },
-      {
-        id: "plansBilling",
-        label: t("settingsModal.sections.plansBilling.label"),
-        icon: CreditCard,
-        description: t("settingsModal.sections.plansBilling.description"),
         group: t("settingsModal.groups.account"),
       },
       {

@@ -634,11 +634,6 @@ export default function PersonalNotesView({ onOpenSettings }: PersonalNotesViewP
       </div>
 
       <div className="flex-1 flex flex-col min-w-0 min-h-0">
-        {!isProLoading && !isProUser && (
-          <RealtimeTranscriptionBanner
-            onUpgrade={onOpenSettings ? () => onOpenSettings("plansBilling") : undefined}
-          />
-        )}
         {isMeetingsFolder ? (
           <div className="flex flex-col items-center justify-center h-full -mt-6">
             <svg
