@@ -677,8 +677,6 @@ export default function SettingsPage({ activeSection = "general" }: SettingsPage
     setFloatingIconAutoHide,
     cloudBackupEnabled,
     setCloudBackupEnabled,
-    telemetryEnabled,
-    setTelemetryEnabled,
     customDictionary,
     setCustomDictionary,
   } = useSettings();
@@ -1709,16 +1707,6 @@ export default function SettingsPage({ activeSection = "general" }: SettingsPage
                 </SettingsPanel>
               )}
 
-              <SettingsPanel>
-                <SettingsPanelRow>
-                  <SettingsRow
-                    label={t("settingsPage.privacy.usageAnalytics")}
-                    description={t("settingsPage.privacy.usageAnalyticsDescription")}
-                  >
-                    <Toggle checked={telemetryEnabled} onChange={setTelemetryEnabled} />
-                  </SettingsRow>
-                </SettingsPanelRow>
-              </SettingsPanel>
             </div>
 
             {/* Permissions */}
