@@ -62,21 +62,22 @@ class UpdateManager {
       }
 
       autoUpdater.channel = nativeArch === "arm64" ? "latest-arm64" : "latest-x64";
-    }
 
-    // Skip code signature verification on macOS — builds on this fork
-    // are unsigned, so the default codesign --verify check always fails.
-    if (process.platform === "darwin") {
-      autoUpdater.verifyUpdateCodeSignature = () => Promise.resolve(null);
+      // On macOS, electron-updater's MacUpdater delegates installation to
+      // Squirrel.Mac (Electron's native autoUpdater) which REQUIRES the app
+      // to be code-signed. Since this fork's builds are unsigned, we must
+      // prevent Squirrel.Mac from being triggered during download.
+      // Setting autoInstallOnAppQuit=false prevents MacUpdater from calling
+      // nativeUpdater.checkForUpdates() after the zip is downloaded.
+      // We handle installation ourselves in installMacUpdate().
+      autoUpdater.autoInstallOnAppQuit = false;
+    } else {
+      // Enable auto-install on quit for signed platforms (Windows/Linux)
+      autoUpdater.autoInstallOnAppQuit = true;
     }
 
     // Disable auto-download - let user control when to download
     autoUpdater.autoDownload = false;
-
-    // Enable auto-install on quit - if user ignores update and quits normally,
-    // the update will install automatically (best UX)
-    // User can also manually trigger install with "Install & Restart" button
-    autoUpdater.autoInstallOnAppQuit = true;
 
     // Enable logging in production for debugging (logs are user-accessible)
     autoUpdater.logger = console;
@@ -132,8 +133,6 @@ class UpdateManager {
             files: info.files,
           };
         }
-        // On macOS, remove quarantine xattr so unsigned updates can launch
-        this.removeQuarantineFromUpdate();
         this.notifyRenderers("update-downloaded", info);
       },
     };
@@ -233,22 +232,157 @@ class UpdateManager {
   }
 
   /**
-   * Remove macOS quarantine xattr from the updater cache so unsigned
-   * builds can be extracted and launched without Gatekeeper blocking them.
+   * Find the downloaded update zip in electron-updater's cache directory.
+   * electron-updater stores it at: ~/Library/Caches/{updaterCacheDirName}/pending/{file}.zip
+   * The cacheDir name comes from app-update.yml (updaterCacheDirName) or app.getName().
    */
-  removeQuarantineFromUpdate() {
-    if (process.platform !== "darwin") return;
-    try {
-      const { execSync } = require("child_process");
-      const { app } = require("electron");
-      const path = require("path");
-      // electron-updater stores downloads in ~/Library/Caches/{name}-updater/
-      const cacheDir = path.join(app.getPath("home"), "Library", "Caches", `${app.name}-updater`);
-      execSync(`xattr -cr "${cacheDir}"`, { timeout: 15000 });
-      console.log("✅ Quarantine flag removed from:", cacheDir);
-    } catch (err) {
-      console.warn("⚠️ Could not remove quarantine flag:", err.message);
+  findDownloadedZip() {
+    const { app } = require("electron");
+    const path = require("path");
+    const fs = require("fs");
+    const os = require("os");
+
+    const baseCacheDir = path.join(os.homedir(), "Library", "Caches");
+    const appName = app.getName(); // "OpenWhispr" (productName)
+
+    // Candidates for the cache directory name
+    const candidates = [appName, appName.toLowerCase(), appName.replace(/\s/g, "-").toLowerCase()];
+
+    for (const name of candidates) {
+      const pendingDir = path.join(baseCacheDir, name, "pending");
+      if (fs.existsSync(pendingDir)) {
+        const zips = fs.readdirSync(pendingDir).filter((f) => f.endsWith(".zip"));
+        if (zips.length > 0) {
+          const zipPath = path.join(pendingDir, zips[0]);
+          console.log("📦 Found update zip:", zipPath);
+          return zipPath;
+        }
+      }
+      // Also check for update.zip in the cache root
+      const rootZip = path.join(baseCacheDir, name, "update.zip");
+      if (fs.existsSync(rootZip)) {
+        console.log("📦 Found cached update.zip:", rootZip);
+        return rootZip;
+      }
     }
+
+    // Last resort: try via autoUpdater's internal helper
+    try {
+      const helper = autoUpdater.downloadedUpdateHelper;
+      if (helper) {
+        const pendingDir = helper.cacheDirForPendingUpdate;
+        if (fs.existsSync(pendingDir)) {
+          const zips = fs.readdirSync(pendingDir).filter((f) => f.endsWith(".zip"));
+          if (zips.length > 0) {
+            const zipPath = path.join(pendingDir, zips[0]);
+            console.log("📦 Found update zip via helper:", zipPath);
+            return zipPath;
+          }
+        }
+        const rootZip = path.join(helper.cacheDir, "update.zip");
+        if (fs.existsSync(rootZip)) {
+          console.log("📦 Found cached update.zip via helper:", rootZip);
+          return rootZip;
+        }
+      }
+    } catch (e) {
+      console.warn("⚠️ Could not access downloadedUpdateHelper:", e.message);
+    }
+
+    return null;
+  }
+
+  /**
+   * macOS-specific update installation that bypasses Squirrel.Mac.
+   * Extracts the downloaded zip and replaces the current .app bundle
+   * using a detached shell script that runs after the app quits.
+   */
+  async installMacUpdate() {
+    const { app, BrowserWindow } = require("electron");
+    const { spawn } = require("child_process");
+    const path = require("path");
+    const fs = require("fs");
+
+    const zipFile = this.findDownloadedZip();
+    if (!zipFile) {
+      throw new Error("Downloaded update zip not found in cache");
+    }
+
+    // Resolve the .app bundle path from the executable path
+    // e.g. /Applications/OpenWhispr.app/Contents/MacOS/OpenWhispr
+    //   → /Applications/OpenWhispr.app
+    const exePath = app.getPath("exe");
+    const appBundle = exePath.replace(/\/Contents\/MacOS\/.*$/, "");
+    console.log("📍 Current app bundle:", appBundle);
+
+    if (!appBundle.endsWith(".app")) {
+      throw new Error(`Unexpected app path: ${appBundle}`);
+    }
+
+    const tempDir = path.join(app.getPath("temp"), "openwhispr-update");
+
+    // Shell script that waits for this process to exit, then extracts and replaces
+    const script = `#!/bin/bash
+set -e
+
+APP_PID=${process.pid}
+ZIP_FILE="${zipFile}"
+APP_BUNDLE="${appBundle}"
+TEMP_DIR="${tempDir}"
+
+# Wait for the current process to exit
+while kill -0 "$APP_PID" 2>/dev/null; do
+  sleep 0.5
+done
+
+# Extract update
+rm -rf "$TEMP_DIR"
+mkdir -p "$TEMP_DIR"
+ditto -x -k "$ZIP_FILE" "$TEMP_DIR"
+
+# Find the extracted .app
+EXTRACTED_APP=$(find "$TEMP_DIR" -maxdepth 1 -name "*.app" -type d | head -1)
+
+if [ -z "$EXTRACTED_APP" ]; then
+  echo "Error: No .app found in extracted zip"
+  rm -rf "$TEMP_DIR"
+  exit 1
+fi
+
+# Replace the current app
+rm -rf "$APP_BUNDLE"
+mv "$EXTRACTED_APP" "$APP_BUNDLE"
+
+# Remove quarantine attribute
+xattr -cr "$APP_BUNDLE" 2>/dev/null || true
+
+# Relaunch
+open "$APP_BUNDLE"
+
+# Cleanup
+rm -rf "$TEMP_DIR"
+rm -f "$0"
+`;
+
+    const scriptPath = path.join(app.getPath("temp"), "openwhispr-updater.sh");
+    fs.writeFileSync(scriptPath, script, { mode: 0o755 });
+    console.log("📝 Updater script written to:", scriptPath);
+
+    // Spawn the updater script detached so it survives our exit
+    const child = spawn("bash", [scriptPath], {
+      detached: true,
+      stdio: "ignore",
+    });
+    child.unref();
+
+    // Close all windows and quit
+    app.removeAllListeners("window-all-closed");
+    BrowserWindow.getAllWindows().forEach((win) => {
+      win.removeAllListeners("close");
+    });
+    app.quit();
+
+    return { success: true, message: "Update installation started" };
   }
 
   async installUpdate() {
@@ -277,8 +411,11 @@ class UpdateManager {
       this.isInstalling = true;
       console.log("🔄 Installing update and restarting...");
 
-      // Ensure quarantine flag is removed right before install
-      this.removeQuarantineFromUpdate();
+      // On macOS, bypass Squirrel.Mac (requires code signing) and
+      // extract the zip ourselves
+      if (process.platform === "darwin") {
+        return await this.installMacUpdate();
+      }
 
       const { app, BrowserWindow } = require("electron");
 
