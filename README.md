@@ -3,6 +3,7 @@
 </p>
 
 <h1 align="center">OpenWhispr</h1>
+<h2 aligh="center">Forked : Free Version</h2>
 
 <p align="center">
   <a href="https://github.com/OpenWhispr/openwhispr/blob/main/LICENSE"><img src="https://img.shields.io/github/license/OpenWhispr/openwhispr?style=flat" alt="License" /></a>
