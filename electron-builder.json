@@ -202,6 +202,6 @@
     "owner": "CodeGlyphFR",
     "repo": "openwhispr",
     "private": false,
-    "releaseType": "draft"
+    "releaseType": "release"
   }
 }
