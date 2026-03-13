@@ -199,7 +199,7 @@
   },
   "publish": {
     "provider": "github",
-    "owner": "OpenWhispr",
+    "owner": "CodeGlyphFR",
     "repo": "openwhispr",
     "private": false,
     "releaseType": "draft"
