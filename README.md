@@ -14,19 +14,12 @@
 
 <p align="center">Voice-to-text dictation app with local (Nvidia Parakeet/Whisper) and cloud models (BYOK).<br/>Privacy-first and available cross-platform.</p>
 
-## Star History
-
-[![Star History Chart](https://api.star-history.com/svg?repos=OpenWhispr/openwhispr&type=date&legend=top-left)](https://www.star-history.com/#OpenWhispr/openwhispr&type=date&legend=top-left)
-
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details. This means you can freely use, modify, and distribute this software for personal or commercial purposes.
 
 ## Features
 
-- ☁️ **OpenWhispr Cloud**: Sign in and transcribe instantly — no API keys needed, with free and Pro plans
-- 🔐 **Account System**: Google OAuth and email/password sign-in with email verification
-- 💳 **Subscription Management**: Free tier (2,000 words/week), Pro tier (unlimited), 7-day free trial
 - 🎤 **Global Hotkey**: Customizable hotkey to start/stop dictation from anywhere (default: backtick `)
 - 🤖 **Multi-Provider AI Processing**: Choose between OpenAI, Anthropic Claude, Google Gemini, or local models
 - 🎯 **Agent Naming**: Personalize your AI assistant with a custom name for natural interactions
@@ -356,7 +349,6 @@ npm run build:linux  # Linux
 ### First Time Setup
 
 1. **Choose Processing Method**:
-   - **OpenWhispr Cloud**: Sign in for instant cloud transcription with free and Pro plans
    - **Bring Your Own Key**: Use your own OpenAI/Groq/AssemblyAI API keys
    - **Local Processing**: Download Whisper or Parakeet models for completely private transcription
 
@@ -441,10 +433,6 @@ Improve transcription accuracy for specific words, names, or technical terms:
 
 ### Processing Options
 
-- **OpenWhispr Cloud**:
-  - Sign in with Google or email — no API keys needed
-  - Free plan: 2,000 words/week with 7-day Pro trial for new accounts
-  - Pro plan: unlimited transcriptions
 - **Bring Your Own Key (BYOK)**:
   - Use your own API keys from OpenAI, Groq, Mistral, AssemblyAI, or custom endpoints
   - Full control over provider and model selection
@@ -452,44 +440,6 @@ Improve transcription accuracy for specific words, names, or technical terms:
   - Install Whisper or NVIDIA Parakeet through the Control Panel
   - Download models: tiny (fastest), base (recommended), small, medium, large (best quality)
   - Complete privacy - audio never leaves your device
-
-## Project Structure
-
-```
-open-whispr/
-├── main.js              # Electron main process & IPC handlers
-├── preload.js           # Electron preload script & API bridge
-├── setup.js             # First-time setup script
-├── package.json         # Dependencies and scripts
-├── env.example          # Environment variables template
-├── CHANGELOG.md         # Project changelog
-├── src/
-│   ├── App.jsx          # Main dictation interface
-│   ├── main.jsx         # React entry point
-│   ├── index.html       # Vite HTML template
-│   ├── index.css        # Tailwind CSS v4 configuration
-│   ├── vite.config.js   # Vite configuration
-│   ├── components/
-│   │   ├── ControlPanel.tsx     # Settings and history UI
-│   │   ├── OnboardingFlow.tsx   # First-time setup wizard
-│   │   ├── SettingsPage.tsx     # Settings interface
-│   │   ├── ui/                  # shadcn/ui components
-│   │   │   ├── button.tsx
-│   │   │   ├── card.tsx
-│   │   │   ├── input.tsx
-│   │   │   ├── LoadingDots.tsx
-│   │   │   ├── Toast.tsx
-│   │   │   ├── toggle.tsx
-│   │   │   └── tooltip.tsx
-│   │   └── lib/
-│   │       └── utils.ts         # Utility functions
-│   ├── services/
-│   │   └── ReasoningService.ts  # Multi-provider AI processing (OpenAI/Anthropic/Gemini)
-│   ├── utils/
-│   │   └── agentName.ts         # Agent name management utility
-│   └── components.json          # shadcn/ui configuration
-└── assets/                      # App icons and resources
-```
 
 ## Technology Stack
 
@@ -651,16 +601,6 @@ OpenWhispr also supports NVIDIA Parakeet models via sherpa-onnx - a fast alterna
 - **Window Size**: Adjust dimensions in `main.js`
 - **Database**: Transcriptions stored in user data directory
 
-## Contributing
-
-We welcome contributions! Please follow these steps:
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
 ### Development Guidelines
 
 - Run `npm run lint` before committing
@@ -703,58 +643,12 @@ OpenWhispr is designed with privacy and security in mind:
    - All platforms: Text is always copied to clipboard - use Ctrl+V (Cmd+V on macOS) to paste manually
 7. **Panel position**: If the panel appears off-screen, restart the app to reset position
 
-### Getting Help
-
-- Check the [Issues](https://github.com/OpenWhispr/openwhispr/issues) page
-- Review the console logs for debugging information
-- For local processing: Ensure whisper.cpp is accessible and models are downloaded
-- For cloud processing: Verify your OpenAI API key and billing status
-- Check the Control Panel for system status and diagnostics
-
 ### Performance Tips
 
 - **Local Processing**: Use "base" model for best balance of speed and accuracy
 - **Cloud Processing**: Generally faster but requires internet connection
 - **Model Selection**: tiny (fastest) → base (recommended) → small → medium → large (best quality)
 - **Permissions**: Ensure all required permissions are granted for smooth operation
-
-## FAQ
-
-**Q: Is OpenWhispr really free?**
-A: Yes! OpenWhispr is open source and free to use. The free plan includes 2,000 words/week of cloud transcription, and local processing is completely free with no limits. Paid plans start from as little as $8/month.
-
-**Q: Which processing method should I use?**
-A: Use local processing for privacy and offline use. Use cloud processing for speed and convenience.
-
-**Q: Can I use this commercially?**
-A: Yes! The MIT license allows commercial use.
-
-**Q: How do I change the hotkey?**
-A: Open the Control Panel (right-click tray icon) and go to Settings. You can set any key as your hotkey.
-
-**Q: Is my data secure?**
-A: With local processing, your audio never leaves your device. With cloud processing, audio is sent to OpenAI's servers (see their privacy policy).
-
-**Q: What languages are supported?**
-A: OpenWhispr supports 58 languages including English, Spanish, French, German, Chinese, Japanese, and more. Set your preferred language in the .env file or use auto-detect.
-
-## Project Status
-
-OpenWhispr is actively maintained and ready for production use. Current version: 1.5.4
-
-- ✅ Core functionality complete
-- ✅ Cross-platform support (macOS, Windows, Linux)
-- ✅ OpenWhispr Cloud with account system and usage tracking
-- ✅ Free and Pro plans with Stripe billing
-- ✅ Local and cloud processing
-- ✅ Multi-provider AI (OpenAI, Anthropic, Gemini, Groq, Mistral, Local)
-- ✅ Compound hotkey support
-- ✅ Windows Push-to-Talk with native key listener
-- ✅ Custom dictionary for improved transcription accuracy
-- ✅ NVIDIA Parakeet support via sherpa-onnx
-- ✅ GNOME Wayland native global shortcuts
-- ✅ Notes system with folders, audio upload, and AI actions
-- ✅ Referral program with shareable invite cards
 
 ## Acknowledgments
 
