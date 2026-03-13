@@ -307,11 +307,6 @@ export default function ControlPanel() {
             setSettingsSection(undefined);
             setShowSettings(true);
           }}
-          userName={user?.name}
-          userEmail={user?.email}
-          userImage={user?.image}
-          isSignedIn={isSignedIn}
-          authLoaded={authLoaded}
           updateAction={
             !updateStatus.isDevelopment &&
             (updateStatus.updateAvailable ||

@@ -6,7 +6,6 @@ import {
   Upload,
   Settings,
   HelpCircle,
-  UserCircle,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { cn } from "./lib/utils";
@@ -18,11 +17,6 @@ interface ControlPanelSidebarProps {
   activeView: ControlPanelView;
   onViewChange: (view: ControlPanelView) => void;
   onOpenSettings: () => void;
-  userName?: string | null;
-  userEmail?: string | null;
-  userImage?: string | null;
-  isSignedIn?: boolean;
-  authLoaded?: boolean;
   updateAction?: React.ReactNode;
 }
 
@@ -30,11 +24,6 @@ export default function ControlPanelSidebar({
   activeView,
   onViewChange,
   onOpenSettings,
-  userName,
-  userEmail,
-  userImage,
-  isSignedIn,
-  authLoaded,
   updateAction,
 }: ControlPanelSidebarProps) {
   const { t } = useTranslation();
@@ -141,33 +130,6 @@ export default function ControlPanelSidebar({
           }
         />
 
-        <div className="mx-1 h-px bg-border/10 dark:bg-white/6 my-1.5!" />
-
-        <div className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md">
-          {userImage ? (
-            <img src={userImage} alt="" className="w-6 h-6 rounded-full shrink-0 object-cover" />
-          ) : (
-            <UserCircle size={18} className="shrink-0 text-foreground/50 dark:text-foreground/45" />
-          )}
-          <div className="flex-1 min-w-0">
-            {isSignedIn && (userName || userEmail) ? (
-              <>
-                <p className="text-xs text-foreground/80 dark:text-foreground/80 truncate leading-tight">
-                  {userName || t("sidebar.defaultUser")}
-                </p>
-                {userEmail && (
-                  <p className="text-xs text-foreground/55 dark:text-foreground/55 truncate leading-tight">
-                    {userEmail}
-                  </p>
-                )}
-              </>
-            ) : authLoaded && !isSignedIn ? (
-              <p className="text-xs text-foreground/45 dark:text-foreground/55">
-                {t("sidebar.notSignedIn")}
-              </p>
-            ) : null}
-          </div>
-        </div>
       </div>
     </div>
   );

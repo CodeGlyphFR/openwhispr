@@ -64,7 +64,6 @@ import { useUsage } from "../hooks/useUsage";
 import { cn } from "./lib/utils";
 
 export type SettingsSectionType =
-  | "account"
   | "general"
   | "hotkeys"
   | "transcription"
@@ -1009,123 +1008,6 @@ export default function SettingsPage({ activeSection = "general" }: SettingsPage
 
   const renderSectionContent = () => {
     switch (activeSection) {
-      case "account":
-        return (
-          <div className="space-y-5">
-            {!NEON_AUTH_URL ? (
-              <>
-                <SectionHeader
-                  title={t("settingsPage.account.title")}
-                  description={t("settingsPage.account.notConfigured")}
-                />
-                <SettingsPanel>
-                  <SettingsPanelRow>
-                    <SettingsRow
-                      label={t("settingsPage.account.featuresDisabled")}
-                      description={t("settingsPage.account.featuresDisabledDescription")}
-                    >
-                      <Badge variant="warning">{t("settingsPage.account.disabled")}</Badge>
-                    </SettingsRow>
-                  </SettingsPanelRow>
-                </SettingsPanel>
-              </>
-            ) : isLoaded && isSignedIn && user ? (
-              <>
-                <SectionHeader title={t("settingsPage.account.title")} />
-                <SettingsPanel>
-                  <SettingsPanelRow>
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 overflow-hidden bg-primary/10 dark:bg-primary/15">
-                        {user.image ? (
-                          <img
-                            src={user.image}
-                            alt={user.name || t("settingsPage.account.user")}
-                            className="w-10 h-10 rounded-full object-cover"
-                          />
-                        ) : (
-                          <UserCircle className="w-5 h-5 text-primary" />
-                        )}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-xs font-medium text-foreground truncate">
-                          {user.name || t("settingsPage.account.user")}
-                        </p>
-                        <p className="text-xs text-muted-foreground truncate">{user.email}</p>
-                      </div>
-                      <Badge variant="success">{t("settingsPage.account.signedIn")}</Badge>
-                    </div>
-                  </SettingsPanelRow>
-                </SettingsPanel>
-
-                <SettingsPanel>
-                  <SettingsPanelRow>
-                    <Button
-                      onClick={handleSignOut}
-                      variant="outline"
-                      disabled={isSigningOut}
-                      size="sm"
-                      className="w-full text-destructive border-destructive/30 hover:bg-destructive/10 hover:border-destructive/50"
-                    >
-                      <LogOut className="mr-1.5 h-3.5 w-3.5" />
-                      {isSigningOut
-                        ? t("settingsPage.account.signOut.signingOut")
-                        : t("settingsPage.account.signOut.signOut")}
-                    </Button>
-                  </SettingsPanelRow>
-                </SettingsPanel>
-              </>
-            ) : isLoaded ? (
-              <>
-                <SectionHeader title={t("settingsPage.account.title")} />
-                <SettingsPanel>
-                  <SettingsPanelRow>
-                    <SettingsRow
-                      label={t("settingsPage.account.notSignedIn")}
-                      description={t("settingsPage.account.notSignedInDescription")}
-                    >
-                      <Badge variant="outline">{t("settingsPage.account.offline")}</Badge>
-                    </SettingsRow>
-                  </SettingsPanelRow>
-                </SettingsPanel>
-
-                <div className="rounded-lg border border-primary/20 dark:border-primary/15 bg-primary/3 dark:bg-primary/6 p-4">
-                  <div className="flex items-start gap-3">
-                    <div className="w-8 h-8 rounded-md bg-primary/10 dark:bg-primary/15 flex items-center justify-center shrink-0 mt-0.5">
-                      <Sparkles className="w-4 h-4 text-primary" />
-                    </div>
-                    <div className="min-w-0 flex-1 space-y-2.5">
-                      <div>
-                        <p className="text-xs font-medium text-foreground">
-                          {t("settingsPage.account.trialCta.title")}
-                        </p>
-                        <p className="text-xs text-muted-foreground leading-relaxed mt-0.5">
-                          {t("settingsPage.account.trialCta.description")}
-                        </p>
-                      </div>
-                      <Button onClick={startOnboarding} size="sm" className="w-full">
-                        <UserCircle className="mr-1.5 h-3.5 w-3.5" />
-                        {t("settingsPage.account.trialCta.button")}
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              </>
-            ) : (
-              <>
-                <SectionHeader title={t("settingsPage.account.title")} />
-                <SettingsPanel>
-                  <SettingsPanelRow>
-                    <div className="flex items-center justify-between">
-                      <Skeleton className="h-4 w-32" />
-                      <Skeleton className="h-5 w-16 rounded-full" />
-                    </div>
-                  </SettingsPanelRow>
-                </SettingsPanel>
-              </>
-            )}
-          </div>
-        );
-
       case "general":
         return (
           <div className="space-y-6">

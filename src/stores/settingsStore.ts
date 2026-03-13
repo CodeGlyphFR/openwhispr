@@ -121,7 +121,6 @@ export interface SettingsState
 
   setTheme: (value: "light" | "dark" | "auto") => void;
   setCloudBackupEnabled: (value: boolean) => void;
-  setTelemetryEnabled: (value: boolean) => void;
   setAudioCuesEnabled: (value: boolean) => void;
   setFloatingIconAutoHide: (enabled: boolean) => void;
   setIsSignedIn: (value: boolean) => void;
