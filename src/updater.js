@@ -321,10 +321,12 @@ class UpdateManager {
 
     const tempDir = path.join(app.getPath("temp"), "openwhispr-update");
 
-    // Shell script that waits for this process to exit, then extracts and replaces.
-    // IMPORTANT: we only replace Contents/ inside the existing .app bundle
-    // so that macOS TCC permissions (accessibility, microphone) are preserved.
-    // Deleting the .app directory itself would make macOS treat it as a new app.
+    // Shell script that waits for this process to exit, then extracts, replaces,
+    // and re-signs the app with a persistent local self-signed certificate.
+    // macOS TCC tracks permissions by code-signing identity. For unsigned apps
+    // the binary hash changes on every update → permissions revoked.
+    // By signing with the same local certificate each time, TCC sees the same
+    // identity and keeps accessibility/microphone permissions intact.
     const script = `#!/bin/bash
 set -e
 
@@ -332,6 +334,8 @@ APP_PID=${process.pid}
 ZIP_FILE="${zipFile}"
 APP_BUNDLE="${appBundle}"
 TEMP_DIR="${tempDir}"
+CERT_NAME="OpenWhispr Local"
+OW_KEYCHAIN="$HOME/Library/Keychains/openwhispr-signing.keychain-db"
 
 # Wait for the current process to exit
 while kill -0 "$APP_PID" 2>/dev/null; do
@@ -353,12 +357,55 @@ if [ -z "$EXTRACTED_APP" ]; then
 fi
 
 # Replace only the Contents directory inside the existing .app bundle
-# to preserve macOS TCC permissions (accessibility, microphone, etc.)
 rm -rf "$APP_BUNDLE/Contents"
 mv "$EXTRACTED_APP/Contents" "$APP_BUNDLE/Contents"
 
 # Remove quarantine attribute
 xattr -cr "$APP_BUNDLE" 2>/dev/null || true
+
+# --- Self-signed code signing to preserve TCC permissions ---
+# Create a dedicated keychain with a known password if it doesn't exist
+if [ ! -f "$OW_KEYCHAIN" ]; then
+  security create-keychain -p "openwhispr" "$OW_KEYCHAIN" 2>/dev/null || true
+
+  # Create a self-signed code-signing certificate (valid 10 years)
+  CERT_TMP=$(mktemp -d)
+  cat > "$CERT_TMP/cert.conf" << 'CERTCFG'
+[req]
+distinguished_name = req_dn
+x509_extensions = codesign
+prompt = no
+[req_dn]
+CN = OpenWhispr Local
+[codesign]
+keyUsage = digitalSignature
+extendedKeyUsage = codeSigning
+CERTCFG
+
+  openssl req -x509 -newkey rsa:2048 \\
+    -keyout "$CERT_TMP/key.pem" -out "$CERT_TMP/cert.pem" \\
+    -days 3650 -nodes -config "$CERT_TMP/cert.conf" 2>/dev/null
+
+  openssl pkcs12 -export \\
+    -out "$CERT_TMP/cert.p12" \\
+    -inkey "$CERT_TMP/key.pem" -in "$CERT_TMP/cert.pem" \\
+    -passout pass: 2>/dev/null
+
+  security import "$CERT_TMP/cert.p12" -k "$OW_KEYCHAIN" -P "" -T /usr/bin/codesign 2>/dev/null || true
+  security set-key-partition-list -S apple-tool:,apple: -s -k "openwhispr" "$OW_KEYCHAIN" 2>/dev/null || true
+
+  rm -rf "$CERT_TMP"
+fi
+
+# Add our keychain to the search list (idempotent)
+EXISTING=$(security list-keychains -d user | tr -d '"' | tr '\\n' ' ')
+if ! echo "$EXISTING" | grep -q "openwhispr-signing"; then
+  security list-keychains -d user -s $EXISTING "$OW_KEYCHAIN" 2>/dev/null || true
+fi
+
+# Unlock and sign
+security unlock-keychain -p "openwhispr" "$OW_KEYCHAIN" 2>/dev/null || true
+codesign --force --deep --sign "$CERT_NAME" --keychain "$OW_KEYCHAIN" "$APP_BUNDLE" 2>/dev/null || true
 
 # Relaunch
 open "$APP_BUNDLE"
