@@ -321,7 +321,10 @@ class UpdateManager {
 
     const tempDir = path.join(app.getPath("temp"), "openwhispr-update");
 
-    // Shell script that waits for this process to exit, then extracts and replaces
+    // Shell script that waits for this process to exit, then extracts and replaces.
+    // IMPORTANT: we only replace Contents/ inside the existing .app bundle
+    // so that macOS TCC permissions (accessibility, microphone) are preserved.
+    // Deleting the .app directory itself would make macOS treat it as a new app.
     const script = `#!/bin/bash
 set -e
 
@@ -349,9 +352,10 @@ if [ -z "$EXTRACTED_APP" ]; then
   exit 1
 fi
 
-# Replace the current app
-rm -rf "$APP_BUNDLE"
-mv "$EXTRACTED_APP" "$APP_BUNDLE"
+# Replace only the Contents directory inside the existing .app bundle
+# to preserve macOS TCC permissions (accessibility, microphone, etc.)
+rm -rf "$APP_BUNDLE/Contents"
+mv "$EXTRACTED_APP/Contents" "$APP_BUNDLE/Contents"
 
 # Remove quarantine attribute
 xattr -cr "$APP_BUNDLE" 2>/dev/null || true
