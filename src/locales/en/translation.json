@@ -405,6 +405,7 @@
       },
       "descriptions": {
         "accessibilityNeeded": "Please grant accessibility permissions in System Settings to enable automatic text pasting.",
+        "accessibilityGranted": "Accessibility permissions are granted. Automatic text pasting is now enabled.",
         "windowsReady": "Windows does not require special permissions for automatic pasting. You're all set!",
         "linuxReadyWithMethod": "Automatic pasting is available using {{method}}. You are all set!",
         "waylandClipboardMode": "Automatic pasting is not available on this Wayland session. OpenWhispr will copy text to your clipboard and you can paste with Ctrl+V.",

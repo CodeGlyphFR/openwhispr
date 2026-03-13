@@ -260,20 +260,34 @@ export const usePermissions = (
   const testAccessibilityPermission = useCallback(async () => {
     const platform = getPlatform();
 
-    // On macOS, actually test the accessibility permission
+    // On macOS, request accessibility permission via system prompt
     if (platform === "darwin") {
       try {
-        await window.electronAPI.pasteText(t("hooks.permissions.accessibilityTestText"));
-        setAccessibilityPermissionGranted(true);
+        // Triggers the macOS system prompt (isTrustedAccessibilityClient(true))
+        const granted = await window.electronAPI.requestAccessibilityPermission();
+        setAccessibilityPermissionGranted(granted);
+        if (granted) {
+          if (showAlertDialog) {
+            showAlertDialog({
+              title: t("hooks.permissions.titles.readyToGo"),
+              description: t("hooks.permissions.descriptions.accessibilityGranted"),
+            });
+          }
+        } else {
+          if (showAlertDialog) {
+            showAlertDialog({
+              title: t("hooks.permissions.titles.accessibilityNeeded"),
+              description: t("hooks.permissions.descriptions.accessibilityNeeded"),
+            });
+          }
+        }
       } catch (err) {
-        console.error("Accessibility permission test failed:", err);
+        console.error("Accessibility permission request failed:", err);
         if (showAlertDialog) {
           showAlertDialog({
             title: t("hooks.permissions.titles.accessibilityNeeded"),
             description: t("hooks.permissions.descriptions.accessibilityNeeded"),
           });
-        } else {
-          alert(t("hooks.permissions.alerts.accessibilityNeeded"));
         }
       }
       return;

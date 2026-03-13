@@ -395,6 +395,7 @@ declare global {
 
       // Clipboard operations
       checkAccessibilityPermission: () => Promise<boolean>;
+      requestAccessibilityPermission: () => Promise<boolean>;
       readClipboard: () => Promise<string>;
       writeClipboard: (text: string) => Promise<{ success: boolean }>;
       checkPasteTools: () => Promise<PasteToolsResult>;

@@ -1433,6 +1433,15 @@ class ClipboardManager {
     return allowed;
   }
 
+  requestAccessibilityPermissions() {
+    if (process.platform !== "darwin") return true;
+    // Pass true to trigger the macOS system prompt for granting permission
+    const allowed = systemPreferences.isTrustedAccessibilityClient(true);
+    // Invalidate the cache so the next check reflects the new state
+    this.accessibilityCache = { value: null, expiresAt: 0 };
+    return allowed;
+  }
+
   showAccessibilityDialog(testError) {
     const isStuckPermission =
       testError.includes("not allowed assistive access") ||

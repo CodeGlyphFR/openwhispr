@@ -648,6 +648,10 @@ class IPCHandlers {
       return this.clipboardManager.checkAccessibilityPermissions();
     });
 
+    ipcMain.handle("request-accessibility-permission", async () => {
+      return this.clipboardManager.requestAccessibilityPermissions();
+    });
+
     ipcMain.handle("read-clipboard", async (event) => {
       return this.clipboardManager.readClipboard();
     });

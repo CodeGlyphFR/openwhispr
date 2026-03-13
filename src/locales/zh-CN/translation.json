@@ -405,6 +405,7 @@
       },
       "descriptions": {
         "accessibilityNeeded": "请在系统设置中授予辅助功能权限，以启用自动粘贴。",
+        "accessibilityGranted": "辅助功能权限已授予。自动粘贴功能现已启用。",
         "windowsReady": "Windows 无需特殊权限即可自动粘贴，一切就绪！",
         "linuxReadyWithMethod": "可使用 {{method}} 进行自动粘贴，一切就绪！",
         "waylandClipboardMode": "此 Wayland 会话不支持自动粘贴。OpenWhispr 会将文本复制到剪贴板，你可以使用 Ctrl+V 粘贴。",
