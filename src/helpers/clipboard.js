@@ -451,11 +451,8 @@ class ClipboardManager {
     const webContents = options.webContents;
 
     try {
-      const originalClipboard = clipboard.readText();
-      this.safeLog(
-        "💾 Saved original clipboard content:",
-        originalClipboard.substring(0, 50) + "..."
-      );
+      // Keep transcribed text in clipboard after paste (no restoration)
+      const originalClipboard = text;
 
       if (platform === "linux" && this._isWayland()) {
         this._writeClipboardWayland(text, webContents);
