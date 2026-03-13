@@ -64,6 +64,12 @@ class UpdateManager {
       autoUpdater.channel = nativeArch === "arm64" ? "latest-arm64" : "latest-x64";
     }
 
+    // Skip code signature verification on macOS — builds on this fork
+    // are unsigned, so the default codesign --verify check always fails.
+    if (process.platform === "darwin") {
+      autoUpdater.verifyUpdateCodeSignature = () => Promise.resolve(null);
+    }
+
     // Disable auto-download - let user control when to download
     autoUpdater.autoDownload = false;
 
@@ -104,9 +110,9 @@ class UpdateManager {
         this.notifyRenderers("update-not-available", info);
       },
       error: (err) => {
-        console.error("❌ Auto-updater error:", err);
+        console.error("❌ Auto-updater error:", err?.message || err, err?.stack || "");
         this.isDownloading = false;
-        this.notifyRenderers("update-error", err);
+        this.notifyRenderers("update-error", err?.message || String(err));
       },
       "download-progress": (progressObj) => {
         console.log(
