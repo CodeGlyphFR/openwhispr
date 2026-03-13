@@ -126,6 +126,8 @@ class UpdateManager {
             files: info.files,
           };
         }
+        // On macOS, remove quarantine xattr so unsigned updates can launch
+        this.removeQuarantineFromUpdate();
         this.notifyRenderers("update-downloaded", info);
       },
     };
@@ -224,6 +226,25 @@ class UpdateManager {
     }
   }
 
+  /**
+   * Remove macOS quarantine xattr from the updater cache so unsigned
+   * builds can be extracted and launched without Gatekeeper blocking them.
+   */
+  removeQuarantineFromUpdate() {
+    if (process.platform !== "darwin") return;
+    try {
+      const { execSync } = require("child_process");
+      const { app } = require("electron");
+      const path = require("path");
+      // electron-updater stores downloads in ~/Library/Caches/{name}-updater/
+      const cacheDir = path.join(app.getPath("home"), "Library", "Caches", `${app.name}-updater`);
+      execSync(`xattr -cr "${cacheDir}"`, { timeout: 15000 });
+      console.log("✅ Quarantine flag removed from:", cacheDir);
+    } catch (err) {
+      console.warn("⚠️ Could not remove quarantine flag:", err.message);
+    }
+  }
+
   async installUpdate() {
     try {
       if (process.env.NODE_ENV === "development") {
@@ -249,6 +270,9 @@ class UpdateManager {
 
       this.isInstalling = true;
       console.log("🔄 Installing update and restarting...");
+
+      // Ensure quarantine flag is removed right before install
+      this.removeQuarantineFromUpdate();
 
       const { app, BrowserWindow } = require("electron");
 
